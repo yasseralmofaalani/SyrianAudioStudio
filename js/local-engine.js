@@ -114,27 +114,37 @@ async function loadFfmpeg(onStatus) {
       }),
     ]);
 
+    // ملفات محلية من نفس أصل GitHub Pages (Worker من CDN يفشل بسبب CORS)
+    const vendorBase = new URL('../vendor/ffmpeg/', import.meta.url).href;
     const [{ FFmpeg }, { toBlobURL }] = await loadWithTimeout(Promise.all([
-      import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm'),
-      import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm'),
+      import(`${vendorBase}index.js`),
+      import(new URL('../vendor/ffmpeg-util/index.js', import.meta.url).href),
     ]), 45000, 'استيراد مكتبات FFmpeg');
 
     const instance = new FFmpeg();
     instance.on('log', () => {});
-    // unpkg كبديل إن فشل jsDelivr
-    const bases = [
-      'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
-      'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
+
+    const sources = [
+      // أولاً: الملفات المحلية (موثوقة على GitHub Pages)
+      { label: 'محلي', base: vendorBase, local: true },
+      // احتياطي من CDN عبر Blob URL
+      { label: 'jsDelivr', base: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm/', local: false },
     ];
 
     let lastErr = null;
-    for (const base of bases) {
+    for (const src of sources) {
       try {
-        onStatus?.('تحميل نواة FFmpeg…');
-        await loadWithTimeout(instance.load({
-          coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
-        }), 90000, 'تحميل WASM');
+        onStatus?.(`تحميل نواة FFmpeg (${src.label})…`);
+        let coreURL;
+        let wasmURL;
+        if (src.local) {
+          coreURL = `${src.base}ffmpeg-core.js`;
+          wasmURL = `${src.base}ffmpeg-core.wasm`;
+        } else {
+          coreURL = await toBlobURL(`${src.base}ffmpeg-core.js`, 'text/javascript');
+          wasmURL = await toBlobURL(`${src.base}ffmpeg-core.wasm`, 'application/wasm');
+        }
+        await loadWithTimeout(instance.load({ coreURL, wasmURL }), 120000, 'تحميل WASM');
         ffmpeg = instance;
         onStatus?.('FFmpeg جاهز في المتصفح');
         return instance;
@@ -324,7 +334,7 @@ export function createLocalEngine() {
 
       try {
         const ff = await loadFfmpeg();
-        const { fetchFile } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm');
+        const { fetchFile } = await import(new URL('../vendor/ffmpeg-util/index.js', import.meta.url).href);
 
         for (const file of targets) {
           if (abortFlag.cancelled) {
