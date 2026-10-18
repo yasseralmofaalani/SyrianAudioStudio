@@ -1,0 +1,12 @@
+﻿node_modules/
+.env
+.env.local
+uploads/**
+!uploads/.gitkeep
+converted/**
+!converted/.gitkeep
+*.log
+.DS_Store
+Thumbs.db
+test-tone.wav
+package-lock.json

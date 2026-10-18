@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 64" role="img" aria-label="Syrian Audio Studio">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#007A3D"/>
+      <stop offset="100%" stop-color="#064E3B"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="64" rx="16" fill="url(#g)"/>
+  <rect x="8" y="8" width="104" height="48" rx="12" fill="none" stroke="#C5A46D" stroke-width="1.5" opacity="0.7"/>
+  <g fill="#CE1126">
+    <polygon points="30,22 32.5,29 40,29 34,33.5 36.2,41 30,36.5 23.8,41 26,33.5 20,29 27.5,29"/>
+    <polygon points="60,22 62.5,29 70,29 64,33.5 66.2,41 60,36.5 53.8,41 56,33.5 50,29 57.5,29"/>
+    <polygon points="90,22 92.5,29 100,29 94,33.5 96.2,41 90,36.5 83.8,41 86,33.5 80,29 87.5,29"/>
+  </g>
+</svg>

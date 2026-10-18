@@ -1,0 +1,27 @@
+{
+  "name": "syrian-audio-studio",
+  "version": "1.0.0",
+  "description": "استوديو الصوت السوري — منصة تحويل ومعالجة وإرسال الملفات الصوتية",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "check:ffmpeg": "node -e \"import('ffmpeg-static').then(m=>console.log('ffmpeg:',m.default))\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "file-type": "^19.6.0",
+    "multer": "^1.4.5-lts.1",
+    "nanoid": "^5.1.0"
+  }
+}

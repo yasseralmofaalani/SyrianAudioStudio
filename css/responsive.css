@@ -1,0 +1,39 @@
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(86vw, 300px);
+    transform: translateX(-105%);
+    transition: transform 0.28s ease;
+    box-shadow: var(--shadow);
+  }
+  html[dir="rtl"] .sidebar {
+    inset: 0 0 0 auto;
+    transform: translateX(105%);
+  }
+  .sidebar.is-open { transform: translateX(0); }
+  #menuBtn { display: grid; }
+  .topbar__titles p { display: none; }
+  .table-wrap { display: none; }
+  .cards-mobile { display: block; }
+}
+
+@media (max-width: 640px) {
+  .main { padding: 1rem 0.85rem 5rem; }
+  .topbar { padding: 0.85rem; }
+  .topbar__actions .btn--primary { padding-inline: 0.75rem; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .dropzone { padding: 1.75rem 1rem; }
+  .player-controls { gap: 0.45rem; }
+  .btn-row .btn { flex: 1 1 auto; }
+}
+
+@media (max-width: 420px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}

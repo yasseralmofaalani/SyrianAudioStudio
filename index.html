@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#007A3D" />
+  <meta name="description" content="استوديو الصوت السوري — منصة ذكية لمعالجة وتحويل وإرسال الملفات الصوتية" />
+  <title>استوديو الصوت السوري | Syrian Audio Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/animations.css" />
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007A3D'/%3E%3Ccircle cx='20' cy='32' r='4' fill='%23CE1126'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23CE1126'/%3E%3Ccircle cx='44' cy='32' r='4' fill='%23CE1126'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="splash" class="splash" role="status" aria-live="polite">
+    <div class="splash__card">
+      <div class="brand-mark brand-mark--lg" aria-hidden="true">
+        <span class="star"></span><span class="star"></span><span class="star"></span>
+      </div>
+      <h1 class="splash__title">استوديو الصوت السوري</h1>
+      <p class="splash__sub">Syrian Audio Studio</p>
+      <div class="splash__bar"><span></span></div>
+    </div>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar" id="sidebar" aria-label="التنقل الرئيسي">
+      <div class="sidebar__brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="star"></span><span class="star"></span><span class="star"></span>
+        </div>
+        <div>
+          <strong>استوديو الصوت السوري</strong>
+          <small>Syrian Audio Studio</small>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <button class="nav-item is-active" data-section="dashboard" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4zm9 0h7v4h-7V4zM4 13h7v7H4v-7zm9 2h7v5h-7v-5z"/></svg>
+          لوحة التحكم
+        </button>
+        <button class="nav-item" data-section="import" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          استيراد الملفات
+        </button>
+        <button class="nav-item" data-section="convert" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14.9-4M20 12a8 8 0 0 1-14.9 4M8 8V4H4m12 12v4h4"/></svg>
+          تحويل الصوت
+        </button>
+        <button class="nav-item" data-section="library" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h12v12H4zM18 6h2v12h-2M8 10h4M8 14h6"/></svg>
+          مكتبة الملفات
+        </button>
+        <button class="nav-item" data-section="telegram" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 5 3 12.5l5.5 2L18 8l-7.5 8.5L16 20l5-15z"/></svg>
+          مركز Telegram
+        </button>
+        <button class="nav-item" data-section="activity" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5zM8 9h8M8 12h8M8 15h5"/></svg>
+          سجل العمليات
+        </button>
+        <button class="nav-item" data-section="settings" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8 4-1.5-.4.4-1.5-1.4-1.4-1.5.4-.4-1.5H12l-.4 1.5-1.5-.4-1.4 1.4.4 1.5L7 12l1.5.4-.4 1.5 1.4 1.4 1.5-.4.4 1.5h2.8l.4-1.5 1.5.4 1.4-1.4-.4-1.5L20 12z"/></svg>
+          الإعدادات
+        </button>
+      </nav>
+      <div class="sidebar__foot">
+        <div class="status-pill" id="ffmpegStatus">
+          <span class="dot"></span>
+          <span>فحص FFmpeg…</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="shell">
+      <header class="topbar">
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="فتح القائمة">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="topbar__titles">
+          <h1>استوديو الصوت السوري</h1>
+          <p>منصة ذكية لمعالجة وتحويل وإرسال الملفات الصوتية.</p>
+        </div>
+        <div class="topbar__actions">
+          <button class="btn btn--ghost" id="themeToggle" type="button" title="الوضع الداكن">☾</button>
+          <button class="btn btn--primary" id="startConvertTop" type="button">بدء التحويل</button>
+        </div>
+      </header>
+
+      <main class="main">
+        <!-- Dashboard -->
+        <section class="section is-active" id="section-dashboard" data-section-panel="dashboard">
+          <div class="section__head">
+            <h2>لوحة التحكم</h2>
+            <p>نظرة شاملة على جلسة العمل الحالية.</p>
+          </div>
+          <div class="stats-grid" id="statsGrid">
+            <article class="stat-card"><span>إجمالي الملفات</span><strong id="statTotal">0</strong></article>
+            <article class="stat-card"><span>مكتملة</span><strong id="statDone">0</strong></article>
+            <article class="stat-card"><span>قيد المعالجة</span><strong id="statProcessing">0</strong></article>
+            <article class="stat-card"><span>فاشلة</span><strong id="statFailed">0</strong></article>
+            <article class="stat-card"><span>الحجم قبل</span><strong id="statIn">0 B</strong></article>
+            <article class="stat-card"><span>الحجم بعد</span><strong id="statOut">0 B</strong></article>
+          </div>
+          <div class="panel">
+            <div class="panel__head">
+              <h3>نسبة الإنجاز الكلية</h3>
+              <strong id="overallPct">0%</strong>
+            </div>
+            <div class="progress progress--lg"><div class="progress__bar" id="overallBar" style="width:0%"></div></div>
+            <div class="wave-decor" aria-hidden="true" id="dashWave"></div>
+          </div>
+        </section>
+
+        <!-- Import -->
+        <section class="section" id="section-import" data-section-panel="import">
+          <div class="section__head">
+            <h2>استيراد الملفات</h2>
+            <p>اختر مجلداً كاملاً أو اسحب الملفات الصوتية هنا.</p>
+          </div>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="منطقة رفع الملفات">
+            <div class="dropzone__glow"></div>
+            <div class="dropzone__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64"><path d="M32 10v30m0 0 10-10M32 40 22 30M12 46h40a6 6 0 0 0 6-6V34"/></svg>
+            </div>
+            <h3>اسحب المجلد أو الملفات وأفلتها هنا</h3>
+            <p>MP3, WAV, OGG, OPUS, M4A, AAC, FLAC, WMA, AIFF, AMR, WEBM</p>
+            <div class="dropzone__actions">
+              <label class="btn btn--primary">
+                اختيار مجلد
+                <input type="file" id="folderInput" webkitdirectory directory multiple hidden />
+              </label>
+              <label class="btn btn--secondary">
+                اختيار ملفات
+                <input type="file" id="filesInput" accept="audio/*,.mp3,.wav,.ogg,.opus,.m4a,.aac,.flac,.wma,.aiff,.aif,.amr,.webm" multiple hidden />
+              </label>
+            </div>
+            <p class="hint" id="folderHint">إن لم يدعم متصفحك اختيار المجلد، استخدم اختيار الملفات المتعددة.</p>
+          </div>
+        </section>
+
+        <!-- Convert -->
+        <section class="section" id="section-convert" data-section-panel="convert">
+          <div class="section__head">
+            <h2>استوديو التحويل</h2>
+            <p>اضبط الصيغة والجودة والتحسينات الاختيارية.</p>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <h3>إعدادات الإخراج</h3>
+              <label class="field">
+                <span>الصيغة</span>
+                <select id="formatSelect">
+                  <option value="mp3" selected>MP3 — توافق واسع</option>
+                  <option value="m4a">M4A / AAC — جودة ممتازة</option>
+                  <option value="ogg">OGG Vorbis</option>
+                  <option value="opus">OPUS — ضغط فعال</option>
+                  <option value="wav">WAV — غير مضغوط</option>
+                  <option value="flac">FLAC — دون فقدان</option>
+                </select>
+              </label>
+              <label class="field" id="bitrateField">
+                <span>الجودة (kbps)</span>
+                <select id="bitrateSelect">
+                  <option value="64">64</option>
+                  <option value="96">96</option>
+                  <option value="128">128</option>
+                  <option value="192" selected>192 (افتراضي)</option>
+                  <option value="256">256</option>
+                  <option value="320">320</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>العمليات المتزامنة</span>
+                <input type="number" id="concurrencyInput" min="1" max="8" value="2" />
+              </label>
+              <div class="btn-row">
+                <button class="btn btn--primary" id="btnStartConvert" type="button">بدء التحويل</button>
+                <button class="btn btn--ghost" id="btnCancelConvert" type="button">إلغاء المعلّق</button>
+                <button class="btn btn--secondary" id="btnRetryFailed" type="button">إعادة محاولة الفاشل</button>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>تحسين وضوح الصوت <small>(اختياري)</small></h3>
+              <label class="check"><input type="checkbox" id="enhLoudnorm" /> Loudness Normalization</label>
+              <label class="check"><input type="checkbox" id="enhDenoise" /> تقليل الضجيج</label>
+              <label class="check"><input type="checkbox" id="enhSpeech" /> تحسين وضوح الكلام</label>
+              <label class="check"><input type="checkbox" id="enhMono" /> تحويل إلى Mono</label>
+              <label class="check"><input type="checkbox" id="enhTrim" /> إزالة الصمت من البداية/النهاية</label>
+              <label class="field">
+                <span>Sample Rate</span>
+                <select id="sampleRateSelect">
+                  <option value="">بدون تغيير</option>
+                  <option value="8000">8000</option>
+                  <option value="16000">16000</option>
+                  <option value="22050">22050</option>
+                  <option value="44100">44100</option>
+                  <option value="48000">48000</option>
+                </select>
+              </label>
+              <p class="hint">التحسينات اختيارية ولا تستعيد تفاصيل مفقودة من التسجيل الأصلي.</p>
+            </div>
+          </div>
+          <div class="panel" id="monitorPanel">
+            <div class="panel__head">
+              <h3>مراقبة المعالجة</h3>
+              <button class="btn btn--secondary btn--sm" id="btnDownloadZip" type="button">تنزيل ZIP</button>
+            </div>
+            <div id="processList" class="process-list"></div>
+            <div class="empty" id="processEmpty">لا توجد عمليات بعد. ارفع ملفات ثم ابدأ التحويل.</div>
+          </div>
+        </section>
+
+        <!-- Library -->
+        <section class="section" id="section-library" data-section-panel="library">
+          <div class="section__head">
+            <h2>مكتبة الملفات</h2>
+            <p>إدارة الملفات المكتشفة ونتائج التحويل.</p>
+          </div>
+          <div class="toolbar">
+            <input type="search" id="fileSearch" placeholder="بحث في الملفات…" class="search" />
+            <button class="btn btn--ghost btn--sm" id="btnSelectAll" type="button">تحديد الكل</button>
+            <button class="btn btn--ghost btn--sm" id="btnDeselectAll" type="button">إلغاء التحديد</button>
+            <button class="btn btn--danger btn--sm" id="btnRemoveSelected" type="button">حذف المحدد</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="filesTable">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>الاسم</th>
+                  <th>الامتداد</th>
+                  <th>الحجم</th>
+                  <th>المدة</th>
+                  <th>الهدف</th>
+                  <th>الحالة</th>
+                  <th>التقدم</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="filesTbody"></tbody>
+            </table>
+          </div>
+          <div class="cards-mobile" id="filesCards"></div>
+          <div class="empty" id="libraryEmpty">لم يتم اكتشاف ملفات بعد.</div>
+
+          <div class="panel player-panel">
+            <div class="panel__head">
+              <h3>مشغّل الصوت</h3>
+              <div class="seg" id="playerSourceSeg">
+                <button type="button" data-src="original" class="is-active">الأصلي</button>
+                <button type="button" data-src="converted">المحوّل</button>
+              </div>
+            </div>
+            <div id="waveform" class="waveform"></div>
+            <div class="player-controls">
+              <button class="icon-btn" id="playBtn" type="button" aria-label="تشغيل">▶</button>
+              <span id="timeCurrent">0:00</span>
+              <input type="range" id="seekBar" min="0" max="1000" value="0" />
+              <span id="timeTotal">0:00</span>
+              <label class="vol">
+                🔊
+                <input type="range" id="volumeBar" min="0" max="1" step="0.01" value="0.9" />
+              </label>
+              <label class="field field--inline">
+                السرعة
+                <select id="rateSelect">
+                  <option value="0.75">0.75×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="1.25">1.25×</option>
+                  <option value="1.5">1.5×</option>
+                  <option value="2">2×</option>
+                </select>
+              </label>
+            </div>
+            <p class="hint" id="playerHint">اختر ملفاً للاستماع.</p>
+          </div>
+        </section>
+
+        <!-- Telegram -->
+        <section class="section" id="section-telegram" data-section-panel="telegram">
+          <div class="section__head">
+            <h2>مركز الإرسال إلى تلغرام</h2>
+            <p>البوت ضروري للإرسال التلقائي. يمكنك الإرسال لشخص محدد برقمه أو @username (المستلم يرى الرسالة من البوت).</p>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <h3>إعدادات الربط</h3>
+              <label class="field">
+                <span>Bot Token (مطلوب)</span>
+                <input type="password" id="tgToken" autocomplete="off" placeholder="123456:ABC…" />
+              </label>
+              <label class="field">
+                <span>Chat ID افتراضي (اختياري)</span>
+                <input type="text" id="tgChat" autocomplete="off" placeholder="لقناة/مجموعة أو رقمك — يمكن تركه فارغاً" />
+              </label>
+              <div class="btn-row">
+                <button class="btn btn--primary" id="btnTgConnect" type="button">ربط واختبار</button>
+                <button class="btn btn--ghost" id="btnTgClear" type="button">مسح الجلسة</button>
+              </div>
+              <p class="hint" id="tgStatus">غير متصل</p>
+              <p class="hint" id="tgBotLinkHint">
+                رابط البوت للمستلم (يجب أن يضغط Start):
+                <a id="tgBotLink" href="https://t.me/syrianAudioBot" target="_blank" rel="noopener">https://t.me/syrianAudioBot</a>
+              </p>
+            </div>
+            <div class="panel">
+              <h3>خيارات الإرسال</h3>
+              <label class="field">
+                <span>وجهة الإرسال</span>
+                <select id="tgDestMode">
+                  <option value="default">الوجهة الافتراضية (Chat ID)</option>
+                  <option value="person" selected>إرسال لشخص</option>
+                </select>
+              </label>
+              <label class="field" id="tgContactsField">
+                <span>من بدأوا البوت</span>
+                <select id="tgContacts">
+                  <option value="">— حدّث القائمة بعد أن يضغط المستلم Start —</option>
+                </select>
+              </label>
+              <div class="btn-row" id="tgContactsRow">
+                <button class="btn btn--secondary btn--sm" id="btnTgContacts" type="button">تحديث قائمة من بدأوا البوت</button>
+              </div>
+              <label class="field" id="tgPersonField">
+                <span>أو اكتب يدوياً (@username / الرقم)</span>
+                <input type="text" id="tgRecipient" autocomplete="off" placeholder="@username أو رقم مثل 123456789" />
+              </label>
+              <div class="btn-row" id="tgResolveRow">
+                <button class="btn btn--ghost btn--sm" id="btnTgResolve" type="button">التحقق من الشخص</button>
+              </div>
+              <p class="hint" id="tgRecipientInfo"></p>
+              <label class="field">
+                <span>طريقة الإرسال</span>
+                <select id="tgMethod">
+                  <option value="document">Document</option>
+                  <option value="audio">Audio</option>
+                  <option value="voice">Voice (OGG/OPUS فقط)</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>رسالة مرافقة (اختياري)</span>
+                <textarea id="tgCaption" rows="3" placeholder="نص يُرسل مع أول ملف…"></textarea>
+              </label>
+              <div class="btn-row">
+                <button class="btn btn--secondary" id="btnTgSendSelected" type="button">إرسال المحدد</button>
+                <button class="btn btn--primary" id="btnTgSendAll" type="button">إرسال كل المحوّل</button>
+              </div>
+              <div id="tgSendLog" class="tg-log"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Activity -->
+        <section class="section" id="section-activity" data-section-panel="activity">
+          <div class="section__head">
+            <h2>سجل العمليات</h2>
+            <p>نجاح، أخطاء، وإلغاءات.</p>
+          </div>
+          <div class="panel">
+            <ul class="activity-list" id="activityList"></ul>
+            <div class="empty" id="activityEmpty">لا أحداث بعد.</div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="section" id="section-settings" data-section-panel="settings">
+          <div class="section__head">
+            <h2>الإعدادات</h2>
+            <p>تفضيلات الواجهة والجلسة.</p>
+          </div>
+          <div class="panel">
+            <label class="check"><input type="checkbox" id="prefReducedMotion" /> تقليل الحركة</label>
+            <label class="check"><input type="checkbox" id="prefDark" /> الوضع الداكن</label>
+            <p class="hint">ملفات الرفع والتحويل تُنظَّف تلقائياً من الخادم وفق مدة الإبقاء المضبوطة.</p>
+            <p class="hint" id="serverInfo">…</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="backdrop" class="backdrop" hidden></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
