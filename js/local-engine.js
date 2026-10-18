@@ -421,6 +421,21 @@ export function createLocalEngine() {
       a.download = f.outputName || 'audio.mp3';
       a.click();
     },
+    getSendableFiles({ ids = null, all = false } = {}) {
+      let list = job.files.filter((f) => f.status === 'done' && f._outBlob);
+      if (!all && Array.isArray(ids) && ids.length) {
+        const set = new Set(ids);
+        list = list.filter((f) => set.has(f.id));
+      } else if (!all) {
+        const selected = list.filter((f) => f.selected);
+        if (selected.length) list = selected;
+      }
+      return list.map((f) => ({
+        id: f.id,
+        name: f.outputName || `${f.id}.mp3`,
+        blob: f._outBlob,
+      }));
+    },
     async downloadZip() {
       const done = job.files.filter((f) => f._outBlob);
       if (!done.length) throw new Error('لا توجد ملفات محوّلة');

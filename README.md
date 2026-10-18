@@ -1,73 +1,41 @@
 # استوديو الصوت السوري | Syrian Audio Studio
 
-منصة ويب عربية (RTL) لمعالجة وتحويل الملفات الصوتية وإرسالها إلى Telegram.
+منصة ويب عربية تعمل على **GitHub Pages فقط** — بدون خادم منفصل.
 
-## حقيقة مهمة عن GitHub Pages
+## الرابط
 
-**GitHub Pages لا يشغّل Node أو FFmpeg أو Telegram.**  
-هو موقع ملفات ثابتة فقط.
+[https://yasseralmofaalani.github.io/SyrianAudioStudio/](https://yasseralmofaalani.github.io/SyrianAudioStudio/)
 
-لذلك التشغيل الكامل يتم بأحد طريقين:
+## ماذا يعمل على GitHub Pages
 
-| الطريقة | التحويل | Telegram | الرابط |
-|---|---|---|---|
-| **Render (موصى به)** — نشر من GitHub | ✅ خادم حقيقي | ✅ | `*.onrender.com` |
-| **محلياً** `npm start` | ✅ | ✅ | `http://127.0.0.1:3847` |
-| **GitHub Pages وحده** | ⚠️ داخل المتصفح فقط | ❌ | `*.github.io` |
+| الميزة | الحالة |
+|---|---|
+| استيراد مجلد / ملفات | ✅ داخل المتصفح |
+| تحويل الصوت (FFmpeg.wasm) | ✅ داخل المتصفح |
+| الاستماع والتنزيل و ZIP | ✅ |
+| إرسال Telegram | ✅ من المتصفح مباشرة إلى Bot API |
 
----
+## الاستخدام
 
-## التشغيل الكامل على الإنترنت (Render) — موصى به
+1. افتح رابط GitHub Pages  
+2. انتظر حتى تظهر حالة **FFmpeg جاهز في المتصفح**  
+3. استورد الملفات → حوّل → نزّل أو أرسل لتلغرام  
+4. لـ Telegram: Bot Token + Chat ID، والمستلم يضغط Start على البوت أولاً  
 
-1. افتح:  
-   [Deploy to Render](https://render.com/deploy?repo=https://github.com/yasseralmofaalani/SyrianAudioStudio)
-2. اربط حساب GitHub واختر المستودع.
-3. اختر الخطة **Free** ثم **Create**.
-4. بعد انتهاء النشر انسخ رابط الخدمة مثل:  
-   `https://syrian-audio-studio.onrender.com`
-5. افتح هذا الرابط — الموقع يعمل بالكامل (واجهة + تحويل + Telegram).
+## ملاحظات
 
-### ربط GitHub Pages بالخادم السحابي (اختياري)
+- أول تحويل قد يتأخر قليلاً أثناء تحميل محرك FFmpeg في المتصفح.  
+- رمز البوت يُحفظ في جلسة المتصفح فقط (sessionStorage) وليس في GitHub.  
+- الملفات الكبيرة جداً قد تكون أبطأ في المتصفح من خادم مخصص.
 
-إذا أردت الإبقاء على رابط GitHub Pages:
-
-1. افتح [https://yasseralmofaalani.github.io/SyrianAudioStudio/](https://yasseralmofaalani.github.io/SyrianAudioStudio/)
-2. **الإعدادات** → الصق رابط Render → **حفظ وإعادة التحميل**
-3. بعدها Pages تستخدم خادم Render لكل الخدمات.
-
-أو عدّل الملف `js/config.js`:
-
-```js
-export const CLOUD_API = 'https://YOUR-SERVICE.onrender.com';
-```
-
----
-
-## التشغيل المحلي
+## تطوير محلي (اختياري)
 
 ```bash
-git clone https://github.com/yasseralmofaalani/SyrianAudioStudio.git
-cd SyrianAudioStudio
 npm install
-copy .env.example .env
 npm start
 ```
 
-ثم افتح: [http://127.0.0.1:3847](http://127.0.0.1:3847)
-
----
-
-## المتغيرات البيئية
-
-| المتغير | الوصف |
-|---|---|
-| `PORT` | منفذ الخادم (Render يضبطه تلقائياً) |
-| `HOST` | الافتراضي `0.0.0.0` للنشر |
-| `TELEGRAM_BOT_TOKEN` | اختياري |
-| `TELEGRAM_CHAT_ID` | اختياري |
-| `API_KEY` | اختياري لحماية `/api` |
-
----
+يفتح نفس الواجهة مع خادم Node إن رغبت.
 
 ## الترخيص
 

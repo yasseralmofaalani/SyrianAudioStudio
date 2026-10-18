@@ -117,7 +117,7 @@ async function startLocalMode() {
   state.engine.subscribe(applyJob);
   applyJob(state.engine.getJob());
   $('#serverInfo').textContent =
-    'وضع GitHub / المتصفح: الاستيراد والتحويل والتنزيل داخل المتصفح. Telegram يحتاج npm start.';
+    'وضع GitHub Pages الكامل: الاستيراد + التحويل + التنزيل + Telegram تعمل داخل المتصفح.';
   document.body.dataset.mode = 'local';
   const pill = $('#ffmpegStatus');
   pill?.classList.remove('is-bad');
@@ -154,12 +154,15 @@ async function boot() {
 
   let serverOk = false;
   try {
-    // جرّب الخادم أولاً (محلي أو سحابي عبر config / ?api= / localStorage)
-    const health = await api('/api/health', { timeoutMs: isStaticHost() ? 8000 : 2500 });
-    await startServerMode(health);
-    serverOk = true;
+    // على GitHub Pages: وضع المتصفح الكامل فقط (بدون خادم)
+    if (isStaticHost()) {
+      await startLocalMode();
+    } else {
+      const health = await api('/api/health', { timeoutMs: 2500 });
+      await startServerMode(health);
+      serverOk = true;
+    }
   } catch {
-    // على GitHub Pages بدون خادم سحابي: وضع المتصفح
     await startLocalMode();
   }
   showApp();
@@ -213,6 +216,7 @@ async function boot() {
 
   initTelegram({
     getJobId,
+    getEngine,
     getSelectedIds: () => $$('.file-check:checked').map((el) => el.value),
     mode: () => state.mode,
   });
