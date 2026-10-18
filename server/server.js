@@ -46,7 +46,8 @@ fs.mkdirSync(UPLOADS, { recursive: true });
 fs.mkdirSync(CONVERTED, { recursive: true });
 
 const PORT = Number(process.env.PORT || 3847);
-const HOST = process.env.HOST || '127.0.0.1';
+// على Render/Railway يجب الاستماع على 0.0.0.0 وليس localhost فقط
+const HOST = process.env.HOST || '0.0.0.0';
 const MAX_FILE_SIZE_MB = Number(process.env.MAX_FILE_SIZE_MB || 100);
 const MAX_FILES_PER_JOB = Number(process.env.MAX_FILES_PER_JOB || 200);
 const API_KEY = process.env.API_KEY || '';

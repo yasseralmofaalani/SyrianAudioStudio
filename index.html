@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261018b" />
-  <link rel="stylesheet" href="css/components.css?v=20261018b" />
-  <link rel="stylesheet" href="css/animations.css?v=20261018b" />
-  <link rel="stylesheet" href="css/responsive.css?v=20261018b" />
+  <link rel="stylesheet" href="css/style.css?v=20261018c" />
+  <link rel="stylesheet" href="css/components.css?v=20261018c" />
+  <link rel="stylesheet" href="css/animations.css?v=20261018c" />
+  <link rel="stylesheet" href="css/responsive.css?v=20261018c" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007A3D'/%3E%3Ccircle cx='20' cy='32' r='4' fill='%23CE1126'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23CE1126'/%3E%3Ccircle cx='44' cy='32' r='4' fill='%23CE1126'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -379,6 +379,22 @@
             <p class="hint">ملفات الرفع والتحويل تُنظَّف تلقائياً من الخادم وفق مدة الإبقاء المضبوطة.</p>
             <p class="hint" id="serverInfo">…</p>
           </div>
+          <div class="panel">
+            <h3>خادم سحابي (للتشغيل الكامل من GitHub Pages)</h3>
+            <p class="hint">
+              GitHub Pages واجهة فقط. لنشر التحويل وTelegram انشر المشروع على Render ثم الصق الرابط هنا
+              (مثال: <code>https://syrian-audio-studio.onrender.com</code>).
+            </p>
+            <label class="field">
+              <span>رابط الخادم السحابي</span>
+              <input type="url" id="cloudApiInput" placeholder="https://your-service.onrender.com" autocomplete="off" />
+            </label>
+            <div class="btn-row">
+              <button class="btn btn--primary" id="btnSaveCloudApi" type="button">حفظ وإعادة التحميل</button>
+              <button class="btn btn--ghost" id="btnClearCloudApi" type="button">مسح</button>
+              <a class="btn btn--secondary" href="https://render.com/deploy?repo=https://github.com/yasseralmofaalani/SyrianAudioStudio" target="_blank" rel="noopener">نشر على Render</a>
+            </div>
+          </div>
         </section>
       </main>
     </div>
@@ -387,6 +403,6 @@
   <div id="toasts" class="toasts" aria-live="polite"></div>
   <div id="backdrop" class="backdrop" hidden></div>
 
-  <script type="module" src="js/app.js?v=20261018b"></script>
+  <script type="module" src="js/app.js?v=20261018c"></script>
 </body>
 </html>

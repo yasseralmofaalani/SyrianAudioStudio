@@ -146,6 +146,7 @@ async function startServerMode(health) {
 async function boot() {
   initNav();
   initTheme();
+  initCloudApiSettings();
 
   // أظهر الواجهة فوراً — لا تنتظر FFmpeg أو الشبكة
   showApp();
@@ -153,15 +154,12 @@ async function boot() {
 
   let serverOk = false;
   try {
-    if (isStaticHost()) {
-      // على GitHub Pages لا يوجد API — لا نضيع وقتاً على /api/health
-      await startLocalMode();
-    } else {
-      const health = await api('/api/health', { timeoutMs: 2500 });
-      await startServerMode(health);
-      serverOk = true;
-    }
+    // جرّب الخادم أولاً (محلي أو سحابي عبر config / ?api= / localStorage)
+    const health = await api('/api/health', { timeoutMs: isStaticHost() ? 8000 : 2500 });
+    await startServerMode(health);
+    serverOk = true;
   } catch {
+    // على GitHub Pages بدون خادم سحابي: وضع المتصفح
     await startLocalMode();
   }
   showApp();
@@ -241,6 +239,38 @@ async function boot() {
 
   clearTimeout(splashTimer);
   showApp();
+}
+
+function initCloudApiSettings() {
+  const input = $('#cloudApiInput');
+  const saveBtn = $('#btnSaveCloudApi');
+  const clearBtn = $('#btnClearCloudApi');
+  if (!input || !saveBtn) return;
+
+  try {
+    input.value = localStorage.getItem('sas_api') || '';
+  } catch { /* ignore */ }
+
+  saveBtn.addEventListener('click', () => {
+    const v = input.value.trim().replace(/\/$/, '');
+    if (v && !/^https?:\/\//i.test(v)) {
+      toast('الرابط يجب أن يبدأ بـ https://', 'error');
+      return;
+    }
+    try {
+      if (v) localStorage.setItem('sas_api', v);
+      else localStorage.removeItem('sas_api');
+    } catch { /* ignore */ }
+    toast('تم حفظ رابط الخادم — سيتم إعادة التحميل', 'success');
+    setTimeout(() => location.reload(), 600);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    try { localStorage.removeItem('sas_api'); } catch { /* ignore */ }
+    input.value = '';
+    toast('تم مسح رابط الخادم — سيتم إعادة التحميل', 'success');
+    setTimeout(() => location.reload(), 600);
+  });
 }
 
 boot().catch((err) => {

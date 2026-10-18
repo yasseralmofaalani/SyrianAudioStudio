@@ -1,3 +1,5 @@
+import { CLOUD_API } from './config.js';
+
 export function $(sel, root = document) {
   return root.querySelector(sel);
 }
@@ -15,6 +17,7 @@ export function getApiBase() {
     const stored = localStorage.getItem('sas_api');
     if (stored) return stored.replace(/\/$/, '');
   } catch { /* ignore */ }
+  if (CLOUD_API) return String(CLOUD_API).replace(/\/$/, '');
   return '';
 }
 
