@@ -2,7 +2,7 @@ import { $, $$, api, toast } from './utils.js';
 
 const AUDIO_EXT = /\.(mp3|wav|ogg|opus|m4a|aac|flac|wma|aiff|aif|amr|webm)$/i;
 
-export function initUploader({ getJobId, onUploaded }) {
+export function initUploader({ getJobId, getEngine, mode, onUploaded }) {
   const dropzone = $('#dropzone');
   const folderInput = $('#folderInput');
   const filesInput = $('#filesInput');
@@ -13,12 +13,6 @@ export function initUploader({ getJobId, onUploaded }) {
   }
 
   async function uploadList(fileList) {
-    const jobId = getJobId();
-    if (!jobId) {
-      toast('الجلسة غير جاهزة بعد', 'error');
-      return;
-    }
-
     const files = [...fileList].filter((f) => {
       if (AUDIO_EXT.test(f.name)) return true;
       return (f.type || '').startsWith('audio/') || f.type === 'video/webm' || f.type === 'application/ogg';
@@ -29,11 +23,22 @@ export function initUploader({ getJobId, onUploaded }) {
       return;
     }
 
-    const fd = new FormData();
-    for (const f of files) fd.append('files', f, f.name);
-
-    toast(`جاري رفع ${files.length} ملفاً…`);
+    toast(`جاري استيراد ${files.length} ملفاً…`);
     try {
+      if (mode?.() === 'local') {
+        const job = await getEngine().addFiles(files);
+        toast(`تم استيراد ${files.length} ملفاً`, 'success');
+        onUploaded?.(job);
+        return;
+      }
+
+      const jobId = getJobId();
+      if (!jobId) {
+        toast('الجلسة غير جاهزة بعد', 'error');
+        return;
+      }
+      const fd = new FormData();
+      for (const f of files) fd.append('files', f, f.name);
       const data = await api(`/api/jobs/${jobId}/upload`, { method: 'POST', body: fd });
       toast(`تم استيراد ${data.added} ملفاً`, 'success');
       onUploaded?.(data.job);
@@ -76,11 +81,16 @@ export function initUploader({ getJobId, onUploaded }) {
   });
 }
 
-export function wireFileActions({ getJobId, onChange, onPlay, onDownload }) {
+export function wireFileActions({ getJobId, getEngine, mode, onChange, onPlay, onDownload }) {
   const tbody = $('#filesTbody');
   const cards = $('#filesCards');
 
   async function patch(action, ids = []) {
+    if (mode?.() === 'local') {
+      const job = getEngine().patchFiles(action, ids);
+      onChange?.(job);
+      return;
+    }
     const jobId = getJobId();
     const job = await api(`/api/jobs/${jobId}/files`, {
       method: 'PATCH',
@@ -94,7 +104,7 @@ export function wireFileActions({ getJobId, onChange, onPlay, onDownload }) {
   $('#btnRemoveSelected').addEventListener('click', async () => {
     const ids = $$('.file-check:checked').map((el) => el.value);
     if (!ids.length) return toast('لا يوجد تحديد', 'error');
-    if (!confirm('حذف الملفات المحددة من قائمة المعالجة؟ (لن تُحذف الأصول من جهازك)')) return;
+    if (!confirm('حذف الملفات المحددة من قائمة المعالجة؟')) return;
     try {
       await patch('remove', ids);
       toast('تم الحذف من القائمة', 'success');

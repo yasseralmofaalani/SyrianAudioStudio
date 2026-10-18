@@ -25,11 +25,15 @@ export function syncBitrateVisibility() {
   field.style.display = hide ? 'none' : '';
 }
 
-export function initConverter({ getJobId, onUpdate }) {
+export function initConverter({ getJobId, getEngine, mode, onUpdate }) {
   const saveOptions = debounce(async () => {
-    const jobId = getJobId();
-    if (!jobId) return;
     try {
+      if (mode?.() === 'local') {
+        onUpdate?.(getEngine().setOptions(collectOptions()));
+        return;
+      }
+      const jobId = getJobId();
+      if (!jobId) return;
       const job = await api(`/api/jobs/${jobId}/options`, {
         method: 'PUT',
         body: collectOptions(),
@@ -50,13 +54,22 @@ export function initConverter({ getJobId, onUpdate }) {
 
   syncBitrateVisibility();
 
-  async function start({ retryFailed = false, onlySelected = false } = {}) {
-    const jobId = getJobId();
+  async function start({ retryFailed = false } = {}) {
     try {
+      if (mode?.() === 'local') {
+        getEngine().setOptions(collectOptions());
+        toast('بدء التحويل داخل المتصفح…');
+        const job = await getEngine().convert({ retryFailed });
+        onUpdate?.(job);
+        toast('انتهى التحويل المحلي', 'success');
+        return;
+      }
+
+      const jobId = getJobId();
       await api(`/api/jobs/${jobId}/options`, { method: 'PUT', body: collectOptions() });
       const data = await api(`/api/jobs/${jobId}/convert`, {
         method: 'POST',
-        body: { retryFailed, onlySelected },
+        body: { retryFailed, onlySelected: false },
       });
       toast(`بدأ تحويل ${data.started} ملفاً`, 'success');
       onUpdate?.(data.job);
@@ -65,11 +78,16 @@ export function initConverter({ getJobId, onUpdate }) {
     }
   }
 
-  $('#btnStartConvert').addEventListener('click', () => start({ onlySelected: false }));
-  $('#startConvertTop').addEventListener('click', () => start({ onlySelected: false }));
+  $('#btnStartConvert').addEventListener('click', () => start({}));
+  $('#startConvertTop').addEventListener('click', () => start({}));
   $('#btnRetryFailed').addEventListener('click', () => start({ retryFailed: true }));
   $('#btnCancelConvert').addEventListener('click', async () => {
     try {
+      if (mode?.() === 'local') {
+        onUpdate?.(getEngine().cancel());
+        toast('تم إلغاء العمليات المعلقة', 'success');
+        return;
+      }
       const job = await api(`/api/jobs/${getJobId()}/cancel`, { method: 'POST', body: {} });
       toast('تم إلغاء العمليات المعلقة', 'success');
       onUpdate?.(job);
@@ -78,9 +96,16 @@ export function initConverter({ getJobId, onUpdate }) {
     }
   });
 
-  $('#btnDownloadZip').addEventListener('click', () => {
-    const jobId = getJobId();
-    window.location.href = apiUrl(`/api/jobs/${jobId}/download-zip`);
+  $('#btnDownloadZip').addEventListener('click', async () => {
+    try {
+      if (mode?.() === 'local') {
+        await getEngine().downloadZip();
+        return;
+      }
+      window.location.href = apiUrl(`/api/jobs/${getJobId()}/download-zip`);
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   });
 
   return { start };

@@ -23,9 +23,22 @@ npm start
 
 [http://127.0.0.1:3847](http://127.0.0.1:3847)
 
-> **مهم:** GitHub Pages موقع ثابت فقط. لا يشغّل Node/FFmpeg/Telegram.  
-> استخدم `npm start` محلياً، أو انشر الخادم على VPS / Render / Railway.  
-> فتح `*.github.io` يعرض الواجهة فقط ولن يحوّل الصوت.
+## التشغيل من GitHub Pages
+
+الموقع:
+[https://yasseralmofaalani.github.io/SyrianAudioStudio/](https://yasseralmofaalani.github.io/SyrianAudioStudio/)
+
+على GitHub Pages تعمل الواجهة داخل المتصفح:
+- استيراد الملفات / المجلدات
+- تحويل الصوت عبر **FFmpeg.wasm** (في المتصفح)
+- الاستماع والتنزيل و ZIP
+
+**Telegram** يحتاج خادم Node (`npm start`) لأنه يتطلّب إخفاء رمز البوت على السيرفر.
+
+### تفعيل Pages مرة واحدة من GitHub
+1. Repository → **Settings** → **Pages**
+2. Source: **GitHub Actions**
+3. بعد الدفع لـ `main` يُنشر تلقائياً عبر workflow
 
 للتطوير مع إعادة التشغيل التلقائي:
 

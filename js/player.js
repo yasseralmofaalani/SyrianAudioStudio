@@ -1,9 +1,9 @@
-import { $, $$, apiUrl, formatDuration, toast } from './utils.js';
+import { $, $$, formatDuration, toast } from './utils.js';
 
 /**
- * مشغّل مخصص مع موجة صوتية مرسومة على Canvas (بدون اعتماد ثقيل)
+ * مشغّل مخصص مع موجة صوتية مرسومة على Canvas
  */
-export function createPlayer({ getJobId }) {
+export function createPlayer({ getStreamUrl }) {
   const canvasHost = $('#waveform');
   const canvas = document.createElement('canvas');
   canvas.style.width = '100%';
@@ -68,19 +68,21 @@ export function createPlayer({ getJobId }) {
   }
 
   async function load(fileId, which = 'converted') {
-    const jobId = getJobId();
-    if (!jobId || !fileId) return;
+    if (!fileId) return;
     currentFileId = fileId;
     source = which;
     $$('#playerSourceSeg button').forEach((b) => {
       b.classList.toggle('is-active', b.dataset.src === which);
     });
-    const url = apiUrl(`/api/jobs/${jobId}/files/${fileId}/stream?which=${which}&t=${Date.now()}`);
+    const url = getStreamUrl?.(fileId, which);
+    if (!url) {
+      toast(which === 'converted' ? 'لا يوجد ناتج محوّل بعد' : 'تعذر تحميل الأصلي', 'error');
+      return;
+    }
     $('#playerHint').textContent = which === 'original' ? 'تشغيل النسخة الأصلية' : 'تشغيل النسخة المحوّلة';
     try {
       audio.pause();
       audio.src = url;
-      await audio.load?.();
       await buildPeaks(url);
       $('#playBtn').textContent = '▶';
     } catch (err) {
@@ -120,7 +122,6 @@ export function createPlayer({ getJobId }) {
     audio.currentTime = (Number($('#seekBar').value) / max) * audio.duration;
   });
 
-  // دعم اللمس على الموجة
   canvas.addEventListener('pointerdown', (e) => {
     if (!audio.duration) return;
     const rect = canvas.getBoundingClientRect();
@@ -147,5 +148,6 @@ export function createPlayer({ getJobId }) {
   return {
     load,
     get currentFileId() { return currentFileId; },
+    get source() { return source; },
   };
 }

@@ -2,8 +2,16 @@ import { $, api, toast } from './utils.js';
 
 const SESSION_KEY = 'sas_tg_session';
 
-export function initTelegram({ getJobId, getSelectedIds }) {
+export function initTelegram({ getJobId, getSelectedIds, mode }) {
   let sessionId = sessionStorage.getItem(SESSION_KEY) || '';
+
+  function guardLocal() {
+    if (mode?.() === 'local') {
+      toast('إرسال Telegram غير متاح من GitHub Pages. شغّل الخادم محلياً (npm start) لاستخدامه.', 'error');
+      return true;
+    }
+    return false;
+  }
 
   function setStatus(text, ok) {
     const el = $('#tgStatus');
@@ -46,6 +54,7 @@ export function initTelegram({ getJobId, getSelectedIds }) {
   });
 
   $('#btnTgConnect').addEventListener('click', async () => {
+    if (guardLocal()) return;
     const botToken = $('#tgToken').value.trim();
     const chatId = $('#tgChat').value.trim();
     if (!botToken) return toast('أدخل Bot Token', 'error');
@@ -85,6 +94,7 @@ export function initTelegram({ getJobId, getSelectedIds }) {
   });
 
   $('#btnTgContacts').addEventListener('click', async () => {
+    if (guardLocal()) return;
     if (!sessionId) return toast('اربط البوت أولاً', 'error');
     try {
       const data = await api('/api/telegram/contacts', {
@@ -112,6 +122,7 @@ export function initTelegram({ getJobId, getSelectedIds }) {
   });
 
   $('#btnTgResolve').addEventListener('click', async () => {
+    if (guardLocal()) return;
     const recipient = $('#tgRecipient').value.trim() || $('#tgContacts').value;
     if (!recipient) return toast('اختر من القائمة أو أدخل @username / الرقم', 'error');
     try {
@@ -130,6 +141,7 @@ export function initTelegram({ getJobId, getSelectedIds }) {
   });
 
   async function send({ all = false } = {}) {
+    if (guardLocal()) return;
     const jobId = getJobId();
     const method = $('#tgMethod').value;
     const caption = $('#tgCaption').value.trim();

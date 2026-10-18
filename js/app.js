@@ -1,18 +1,25 @@
 import { $, $$, api, apiUrl, toast, debounce, isStaticHost } from './utils.js';
 import { renderDashboard, renderActivity } from './dashboard.js';
 import { initUploader, wireFileActions } from './uploader.js';
-import { initConverter, renderFiles } from './converter.js';
+import { initConverter, renderFiles, collectOptions } from './converter.js';
 import { createPlayer } from './player.js';
 import { initTelegram } from './telegram.js';
+import { bootLocalMode } from './local-engine.js';
 
 const state = {
   jobId: null,
   job: null,
   pollTimer: null,
+  engine: null, // local engine when on GitHub Pages / no API
+  mode: 'server', // 'server' | 'local'
 };
 
 function getJobId() {
   return state.jobId;
+}
+
+function getEngine() {
+  return state.engine;
 }
 
 function applyJob(job) {
@@ -24,6 +31,7 @@ function applyJob(job) {
 }
 
 async function refreshJob() {
+  if (state.mode === 'local') return;
   if (!state.jobId) return;
   try {
     const job = await api(`/api/jobs/${state.jobId}`);
@@ -39,6 +47,7 @@ async function refreshJob() {
 }
 
 function startPolling() {
+  if (state.mode === 'local') return;
   if (state.pollTimer) return;
   state.pollTimer = setInterval(refreshJob, 900);
 }
@@ -102,59 +111,76 @@ async function boot() {
   const splash = $('#splash');
   const app = $('#app');
 
+  let serverOk = false;
   try {
     const health = await api('/api/health');
+    serverOk = true;
+    state.mode = 'server';
     const pill = $('#ffmpegStatus');
     if (health.ffmpeg) {
       pill.classList.add('is-ok');
-      pill.querySelector('span:last-child').textContent = 'FFmpeg جاهز';
+      pill.querySelector('span:last-child').textContent = 'FFmpeg جاهز (خادم)';
     } else {
       pill.classList.add('is-bad');
       pill.querySelector('span:last-child').textContent = 'FFmpeg غير متاح';
     }
     $('#serverInfo').textContent =
-      `الخادم يعمل · حد الملف ${health.maxFileSizeMb}MB · حتى ${health.maxFilesPerJob} ملفاً/جلسة`;
+      `وضع الخادم · حد الملف ${health.maxFileSizeMb}MB · حتى ${health.maxFilesPerJob} ملفاً/جلسة`;
 
     const job = await api('/api/jobs', { method: 'POST', body: {} });
     applyJob(job);
-  } catch (err) {
-    $('#ffmpegStatus').classList.add('is-bad');
-    $('#ffmpegStatus').querySelector('span:last-child').textContent = 'الخادم غير متصل';
-    if (isStaticHost()) {
-      $('#serverInfo').textContent =
-        'أنت على GitHub Pages (موقع ثابت). التحويل وTelegram يحتاجان تشغيل الخادم: npm start ثم افتح http://127.0.0.1:3847';
-      toast('GitHub Pages يعرض الواجهة فقط — شغّل المشروع محلياً بـ npm start لاستخدام التحويل', 'error');
-    } else {
-      $('#serverInfo').textContent = 'تعذر الاتصال بخادم Node. تأكد أن npm start يعمل.';
-      toast(err.message || 'فشل الاتصال بالخادم', 'error');
-    }
+  } catch {
+    // تفعيل الوضع المحلي تلقائياً على GitHub Pages أو عند غياب الخادم
+    state.mode = 'local';
+    state.engine = await bootLocalMode();
+    state.engine.subscribe(applyJob);
+    applyJob(state.engine.getJob());
+    $('#serverInfo').textContent =
+      'وضع GitHub / المتصفح: الاستيراد والتحويل والتنزيل تعمل داخل المتصفح. إرسال Telegram يحتاج خادم Node.';
+    document.body.dataset.mode = 'local';
   }
 
-  const player = createPlayer({ getJobId });
+  const player = createPlayer({
+    getJobId,
+    getStreamUrl: (fileId, which) => {
+      if (state.mode === 'local') return state.engine.getStreamUrl(fileId, which);
+      return apiUrl(`/api/jobs/${getJobId()}/files/${fileId}/stream?which=${which}&t=${Date.now()}`);
+    },
+  });
 
   initUploader({
     getJobId,
+    getEngine,
+    mode: () => state.mode,
     onUploaded: (job) => {
       applyJob(job);
-      // انتقل لقسم المكتبة
       $$('.nav-item').find((b) => b.dataset.section === 'library')?.click();
     },
   });
 
   wireFileActions({
     getJobId,
+    getEngine,
+    mode: () => state.mode,
     onChange: applyJob,
     onPlay: (id, which) => {
       player.load(id, which);
       $$('.nav-item').find((b) => b.dataset.section === 'library')?.click();
     },
     onDownload: (id) => {
+      if (state.mode === 'local') {
+        try { state.engine.downloadFile(id); }
+        catch (err) { toast(err.message, 'error'); }
+        return;
+      }
       window.location.href = apiUrl(`/api/jobs/${getJobId()}/files/${id}/download`);
     },
   });
 
-  const converter = initConverter({
+  initConverter({
     getJobId,
+    getEngine,
+    mode: () => state.mode,
     onUpdate: (job) => {
       applyJob(job);
       startPolling();
@@ -165,13 +191,23 @@ async function boot() {
   initTelegram({
     getJobId,
     getSelectedIds: () => $$('.file-check:checked').map((el) => el.value),
+    mode: () => state.mode,
   });
+
+  // مزامنة خيارات التحويل المحلية عند التغيير
+  if (!serverOk) {
+    ['formatSelect', 'bitrateSelect', 'concurrencyInput', 'sampleRateSelect',
+      'enhLoudnorm', 'enhDenoise', 'enhSpeech', 'enhMono', 'enhTrim'].forEach((id) => {
+      $(`#${id}`)?.addEventListener('change', () => {
+        state.engine?.setOptions(collectOptions());
+      });
+    });
+  }
 
   $('#fileSearch').addEventListener('input', debounce(() => {
     renderFiles(state.job, { query: $('#fileSearch').value });
   }, 200));
 
-  // اختصار لوحة المفاتيح
   document.addEventListener('keydown', (e) => {
     if (e.key === '/' && !e.target.matches('input, textarea, select')) {
       e.preventDefault();
@@ -184,8 +220,7 @@ async function boot() {
     app.hidden = false;
   }, 900);
 
-  // احتفظ بالمرجع لتجنب unused lint
-  void converter;
+  void isStaticHost;
 }
 
 boot();
