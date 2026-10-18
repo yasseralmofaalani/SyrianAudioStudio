@@ -57,18 +57,37 @@ export function toast(message, type = 'info') {
 }
 
 export async function api(path, options = {}) {
-  const opts = { ...options };
+  const { timeoutMs: customTimeout, ...rest } = options;
+  const opts = { ...rest };
   opts.headers = { ...(options.headers || {}) };
   if (opts.body && !(opts.body instanceof FormData)) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
-  const res = await fetch(apiUrl(path), opts);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || `خطأ في الطلب (${res.status})`);
+
+  const timeoutMs = customTimeout ?? (isStaticHost() ? 2500 : 15000);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  if (opts.signal) {
+    opts.signal.addEventListener('abort', () => ctrl.abort(), { once: true });
   }
-  return data;
+  opts.signal = ctrl.signal;
+
+  try {
+    const res = await fetch(apiUrl(path), opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || `خطأ في الطلب (${res.status})`);
+    }
+    return data;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('انتهت مهلة الاتصال بالخادم');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function debounce(fn, ms = 250) {

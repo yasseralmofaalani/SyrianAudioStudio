@@ -107,21 +107,42 @@ async function loadFfmpeg(onStatus) {
 
   ffmpegLoading = (async () => {
     onStatus?.('تحميل محرك FFmpeg في المتصفح…');
-    const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+    const loadWithTimeout = (promise, ms, label) => Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`انتهت مهلة ${label}`)), ms);
+      }),
+    ]);
+
+    const [{ FFmpeg }, { toBlobURL }] = await loadWithTimeout(Promise.all([
       import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm'),
       import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm'),
-    ]);
+    ]), 45000, 'استيراد مكتبات FFmpeg');
 
     const instance = new FFmpeg();
     instance.on('log', () => {});
-    const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
-    await instance.load({
-      coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    ffmpeg = instance;
-    onStatus?.('FFmpeg جاهز في المتصفح');
-    return instance;
+    // unpkg كبديل إن فشل jsDelivr
+    const bases = [
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
+      'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
+    ];
+
+    let lastErr = null;
+    for (const base of bases) {
+      try {
+        onStatus?.('تحميل نواة FFmpeg…');
+        await loadWithTimeout(instance.load({
+          coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
+        }), 90000, 'تحميل WASM');
+        ffmpeg = instance;
+        onStatus?.('FFmpeg جاهز في المتصفح');
+        return instance;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    throw lastErr || new Error('تعذر تحميل نواة FFmpeg');
   })();
 
   try {
@@ -426,10 +447,13 @@ export function createLocalEngine() {
 export async function bootLocalMode() {
   toast('وضع المتصفح: الواجهة تعمل من GitHub بدون خادم', 'success');
   const engine = createLocalEngine();
-  try {
-    await engine.ensureFfmpeg();
-  } catch (err) {
-    toast(err.message, 'error');
-  }
+  // لا ننتظر FFmpeg هنا حتى لا تتجمد شاشة الافتتاح
+  engine.ensureFfmpeg().catch((err) => {
+    const pill = document.querySelector('#ffmpegStatus');
+    pill?.classList.add('is-bad');
+    const text = pill?.querySelector('span:last-child');
+    if (text) text.textContent = 'تعذر تحميل FFmpeg';
+    toast(err.message || 'تعذر تحميل FFmpeg في المتصفح', 'error');
+  });
   return engine;
 }

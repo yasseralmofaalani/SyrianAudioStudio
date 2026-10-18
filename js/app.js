@@ -10,8 +10,8 @@ const state = {
   jobId: null,
   job: null,
   pollTimer: null,
-  engine: null, // local engine when on GitHub Pages / no API
-  mode: 'server', // 'server' | 'local'
+  engine: null,
+  mode: 'server',
 };
 
 function getJobId() {
@@ -28,6 +28,13 @@ function applyJob(job) {
   renderDashboard(job);
   renderActivity(job);
   renderFiles(job, { query: $('#fileSearch')?.value || '' });
+}
+
+function showApp() {
+  const splash = $('#splash');
+  const app = $('#app');
+  splash?.classList.add('is-done');
+  if (app) app.hidden = false;
 }
 
 async function refreshJob() {
@@ -104,44 +111,60 @@ function initTheme() {
   });
 }
 
+async function startLocalMode() {
+  state.mode = 'local';
+  state.engine = await bootLocalMode();
+  state.engine.subscribe(applyJob);
+  applyJob(state.engine.getJob());
+  $('#serverInfo').textContent =
+    'وضع GitHub / المتصفح: الاستيراد والتحويل والتنزيل داخل المتصفح. Telegram يحتاج npm start.';
+  document.body.dataset.mode = 'local';
+  const pill = $('#ffmpegStatus');
+  pill?.classList.remove('is-bad');
+  const text = pill?.querySelector('span:last-child');
+  if (text && /فحص|…|.../.test(text.textContent)) {
+    text.textContent = 'جاري تجهيز FFmpeg في الخلفية…';
+  }
+}
+
+async function startServerMode(health) {
+  state.mode = 'server';
+  const pill = $('#ffmpegStatus');
+  if (health.ffmpeg) {
+    pill.classList.add('is-ok');
+    pill.querySelector('span:last-child').textContent = 'FFmpeg جاهز (خادم)';
+  } else {
+    pill.classList.add('is-bad');
+    pill.querySelector('span:last-child').textContent = 'FFmpeg غير متاح';
+  }
+  $('#serverInfo').textContent =
+    `وضع الخادم · حد الملف ${health.maxFileSizeMb}MB · حتى ${health.maxFilesPerJob} ملفاً/جلسة`;
+  const job = await api('/api/jobs', { method: 'POST', body: {} });
+  applyJob(job);
+}
+
 async function boot() {
   initNav();
   initTheme();
 
-  const splash = $('#splash');
-  const app = $('#app');
+  // أظهر الواجهة بسرعة حتى لو استمر تحميل FFmpeg
+  const splashTimer = setTimeout(showApp, 700);
 
   let serverOk = false;
   try {
-    const health = await api('/api/health');
-    serverOk = true;
-    state.mode = 'server';
-    const pill = $('#ffmpegStatus');
-    if (health.ffmpeg) {
-      pill.classList.add('is-ok');
-      pill.querySelector('span:last-child').textContent = 'FFmpeg جاهز (خادم)';
+    if (isStaticHost()) {
+      // على GitHub Pages لا يوجد API — لا نضيع وقتاً على /api/health
+      await startLocalMode();
     } else {
-      pill.classList.add('is-bad');
-      pill.querySelector('span:last-child').textContent = 'FFmpeg غير متاح';
+      const health = await api('/api/health', { timeoutMs: 2500 });
+      await startServerMode(health);
+      serverOk = true;
     }
-    $('#serverInfo').textContent =
-      `وضع الخادم · حد الملف ${health.maxFileSizeMb}MB · حتى ${health.maxFilesPerJob} ملفاً/جلسة`;
-
-    const job = await api('/api/jobs', { method: 'POST', body: {} });
-    applyJob(job);
   } catch {
-    // تفعيل الوضع المحلي تلقائياً على GitHub Pages أو عند غياب الخادم
-    state.mode = 'local';
-    state.engine = await bootLocalMode();
-    state.engine.subscribe(applyJob);
-    applyJob(state.engine.getJob());
-    $('#serverInfo').textContent =
-      'وضع GitHub / المتصفح: الاستيراد والتحويل والتنزيل تعمل داخل المتصفح. إرسال Telegram يحتاج خادم Node.';
-    document.body.dataset.mode = 'local';
+    await startLocalMode();
   }
 
   const player = createPlayer({
-    getJobId,
     getStreamUrl: (fileId, which) => {
       if (state.mode === 'local') return state.engine.getStreamUrl(fileId, which);
       return apiUrl(`/api/jobs/${getJobId()}/files/${fileId}/stream?which=${which}&t=${Date.now()}`);
@@ -194,7 +217,6 @@ async function boot() {
     mode: () => state.mode,
   });
 
-  // مزامنة خيارات التحويل المحلية عند التغيير
   if (!serverOk) {
     ['formatSelect', 'bitrateSelect', 'concurrencyInput', 'sampleRateSelect',
       'enhLoudnorm', 'enhDenoise', 'enhSpeech', 'enhMono', 'enhTrim'].forEach((id) => {
@@ -215,12 +237,12 @@ async function boot() {
     }
   });
 
-  setTimeout(() => {
-    splash.classList.add('is-done');
-    app.hidden = false;
-  }, 900);
-
-  void isStaticHost;
+  clearTimeout(splashTimer);
+  showApp();
 }
 
-boot();
+boot().catch((err) => {
+  console.error(err);
+  showApp();
+  toast(err.message || 'تعذر تشغيل التطبيق', 'error');
+});
