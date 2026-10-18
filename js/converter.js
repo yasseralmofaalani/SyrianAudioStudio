@@ -55,13 +55,28 @@ export function initConverter({ getJobId, getEngine, mode, onUpdate }) {
   syncBitrateVisibility();
 
   async function start({ retryFailed = false } = {}) {
+    const startBtn = $('#btnStartConvert');
+    const topBtn = $('#startConvertTop');
+    const setBusy = (busy) => {
+      if (startBtn) startBtn.disabled = busy;
+      if (topBtn) topBtn.disabled = busy;
+      if (startBtn) startBtn.textContent = busy ? 'جارٍ التحويل…' : 'بدء التحويل';
+    };
+
     try {
       if (mode?.() === 'local') {
+        setBusy(true);
         getEngine().setOptions(collectOptions());
         toast('بدء التحويل داخل المتصفح…');
         const job = await getEngine().convert({ retryFailed });
         onUpdate?.(job);
-        toast('انتهى التحويل المحلي', 'success');
+        const done = job.files?.filter((f) => f.status === 'done').length || 0;
+        const failed = job.files?.filter((f) => f.status === 'failed').length || 0;
+        if (done && !failed) toast(`اكتمل التحويل: ${done} ملفاً — راجع المكتبة للتنزيل`, 'success');
+        else if (done) toast(`اكتمل ${done} · فشل ${failed}`, 'info');
+        else toast(failed ? `فشل التحويل (${failed}) — راجع سجل العمليات` : 'لم يكتمل أي ملف', 'error');
+        // اعرض المكتبة حيث تظهر أزرار التنزيل
+        document.querySelector('.nav-item[data-section="library"]')?.click();
         return;
       }
 
@@ -75,6 +90,8 @@ export function initConverter({ getJobId, getEngine, mode, onUpdate }) {
       onUpdate?.(data.job);
     } catch (err) {
       toast(err.message, 'error');
+    } finally {
+      setBusy(false);
     }
   }
 

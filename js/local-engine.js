@@ -164,7 +164,8 @@ async function loadFfmpeg(onStatus) {
 }
 
 function buildArgs(options, inName, outName) {
-  const args = ['-i', inName];
+  // -y ضروري في wasm وإلا قد يتوقف بانتظار تأكيد الكتابة
+  const args = ['-y', '-i', inName];
   const enh = options.enhancements || {};
   if (enh.mono) args.push('-ac', '1');
   if (enh.sampleRate) args.push('-ar', String(enh.sampleRate));
@@ -207,6 +208,23 @@ function buildArgs(options, inName, outName) {
   }
   args.push('-vn', outName);
   return args;
+}
+
+function toOutBlob(data, outExt) {
+  // readFile يعيد Uint8Array — لا نستخدم .buffer مباشرة (قد يشمل بايتات زائدة)
+  const bytes = data instanceof Uint8Array
+    ? data
+    : new Uint8Array(data?.buffer || data || []);
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  const type = outExt === 'mp3' ? 'audio/mpeg'
+    : outExt === 'wav' ? 'audio/wav'
+    : outExt === 'm4a' || outExt === 'aac' ? 'audio/mp4'
+    : outExt === 'ogg' ? 'audio/ogg'
+    : outExt === 'opus' ? 'audio/ogg'
+    : outExt === 'flac' ? 'audio/flac'
+    : `audio/${outExt}`;
+  return new Blob([copy], { type });
 }
 
 export function createLocalEngine() {
@@ -353,19 +371,32 @@ export function createLocalEngine() {
           const outExt = job.options.format || 'mp3';
           const outName = `out_${file.id}.${outExt}`;
 
+          let progressHandler = null;
           try {
-            const progressHandler = ({ progress }) => {
+            let lastUi = 0;
+            progressHandler = ({ progress }) => {
               file.progress = Math.min(99, Math.max(5, Math.round((progress || 0) * 100)));
-              notify();
+              const now = Date.now();
+              if (now - lastUi > 250) {
+                lastUi = now;
+                notify();
+              }
             };
             ff.on('progress', progressHandler);
 
             await ff.writeFile(inName, await fetchFile(file._file));
-            await ff.exec(buildArgs(job.options, inName, outName));
+            file.progress = 15;
+            notify();
+
+            const code = await ff.exec(buildArgs(job.options, inName, outName));
+            if (typeof code === 'number' && code !== 0) {
+              throw new Error(`FFmpeg انتهى برمز ${code}`);
+            }
+
             const data = await ff.readFile(outName);
-            const blob = new Blob([data.buffer], {
-              type: outExt === 'mp3' ? 'audio/mpeg' : `audio/${outExt}`,
-            });
+            const blob = toOutBlob(data, outExt);
+            if (!blob.size) throw new Error('الملف الناتج فارغ');
+
             if (file._outUrl) URL.revokeObjectURL(file._outUrl);
             file._outBlob = blob;
             file._outUrl = URL.createObjectURL(blob);
@@ -376,21 +407,22 @@ export function createLocalEngine() {
             file.progress = 100;
             pushActivity(job, {
               type: 'success',
-              message: `اكتمل: ${file.originalName} → ${file.outputName}`,
+              message: `اكتمل: ${file.originalName} → ${file.outputName} (${Math.round(blob.size / 1024)} KB)`,
               fileId: file.id,
             });
-
-            try { await ff.deleteFile(inName); } catch { /* ignore */ }
-            try { await ff.deleteFile(outName); } catch { /* ignore */ }
-            try { ff.off?.('progress', progressHandler); } catch { /* ignore */ }
           } catch (err) {
             file.status = 'failed';
             file.error = err.message || 'فشل التحويل المحلي';
+            file.progress = 0;
             pushActivity(job, {
               type: 'error',
               message: `فشل: ${file.originalName} — ${file.error}`,
               fileId: file.id,
             });
+          } finally {
+            try { if (progressHandler) ff.off('progress', progressHandler); } catch { /* ignore */ }
+            try { await ff.deleteFile(inName); } catch { /* ignore */ }
+            try { await ff.deleteFile(outName); } catch { /* ignore */ }
           }
           notify();
         }
@@ -398,8 +430,13 @@ export function createLocalEngine() {
         busy = false;
         const anyFail = job.files.some((f) => f.status === 'failed');
         const anyDone = job.files.some((f) => f.status === 'done');
-        job.status = anyFail && anyDone ? 'partial' : anyFail ? 'failed' : 'done';
-        pushActivity(job, { type: anyFail ? 'warning' : 'success', message: 'انتهت دفعة التحويل المحلي' });
+        job.status = anyFail && anyDone ? 'partial' : anyFail ? 'failed' : anyDone ? 'done' : 'ready';
+        const doneCount = job.files.filter((f) => f.status === 'done').length;
+        const failCount = job.files.filter((f) => f.status === 'failed').length;
+        pushActivity(job, {
+          type: anyFail ? 'warning' : 'success',
+          message: `انتهى التحويل — مكتمل: ${doneCount} · فشل: ${failCount}`,
+        });
         notify();
       }
       return publicJob(job);
