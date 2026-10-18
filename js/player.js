@@ -1,4 +1,4 @@
-import { $, $$, formatDuration, toast } from './utils.js';
+import { $, $$, apiUrl, formatDuration, toast } from './utils.js';
 
 /**
  * مشغّل مخصص مع موجة صوتية مرسومة على Canvas (بدون اعتماد ثقيل)
@@ -75,7 +75,7 @@ export function createPlayer({ getJobId }) {
     $$('#playerSourceSeg button').forEach((b) => {
       b.classList.toggle('is-active', b.dataset.src === which);
     });
-    const url = `/api/jobs/${jobId}/files/${fileId}/stream?which=${which}&t=${Date.now()}`;
+    const url = apiUrl(`/api/jobs/${jobId}/files/${fileId}/stream?which=${which}&t=${Date.now()}`);
     $('#playerHint').textContent = which === 'original' ? 'تشغيل النسخة الأصلية' : 'تشغيل النسخة المحوّلة';
     try {
       audio.pause();

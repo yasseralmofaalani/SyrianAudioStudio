@@ -1,4 +1,4 @@
-import { $, $$, api, toast, formatBytes, formatDuration, statusBadge, debounce } from './utils.js';
+import { $, api, apiUrl, toast, formatBytes, formatDuration, statusBadge, debounce } from './utils.js';
 
 export function collectOptions() {
   const format = $('#formatSelect').value;
@@ -80,7 +80,7 @@ export function initConverter({ getJobId, onUpdate }) {
 
   $('#btnDownloadZip').addEventListener('click', () => {
     const jobId = getJobId();
-    window.location.href = `/api/jobs/${jobId}/download-zip`;
+    window.location.href = apiUrl(`/api/jobs/${jobId}/download-zip`);
   });
 
   return { start };

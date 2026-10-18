@@ -1,4 +1,4 @@
-import { $, $$, api, toast, debounce } from './utils.js';
+import { $, $$, api, apiUrl, toast, debounce, isStaticHost } from './utils.js';
 import { renderDashboard, renderActivity } from './dashboard.js';
 import { initUploader, wireFileActions } from './uploader.js';
 import { initConverter, renderFiles } from './converter.js';
@@ -118,9 +118,16 @@ async function boot() {
     const job = await api('/api/jobs', { method: 'POST', body: {} });
     applyJob(job);
   } catch (err) {
-    toast(err.message || 'فشل الاتصال بالخادم', 'error');
     $('#ffmpegStatus').classList.add('is-bad');
     $('#ffmpegStatus').querySelector('span:last-child').textContent = 'الخادم غير متصل';
+    if (isStaticHost()) {
+      $('#serverInfo').textContent =
+        'أنت على GitHub Pages (موقع ثابت). التحويل وTelegram يحتاجان تشغيل الخادم: npm start ثم افتح http://127.0.0.1:3847';
+      toast('GitHub Pages يعرض الواجهة فقط — شغّل المشروع محلياً بـ npm start لاستخدام التحويل', 'error');
+    } else {
+      $('#serverInfo').textContent = 'تعذر الاتصال بخادم Node. تأكد أن npm start يعمل.';
+      toast(err.message || 'فشل الاتصال بالخادم', 'error');
+    }
   }
 
   const player = createPlayer({ getJobId });
@@ -142,7 +149,7 @@ async function boot() {
       $$('.nav-item').find((b) => b.dataset.section === 'library')?.click();
     },
     onDownload: (id) => {
-      window.location.href = `/api/jobs/${getJobId()}/files/${id}/download`;
+      window.location.href = apiUrl(`/api/jobs/${getJobId()}/files/${id}/download`);
     },
   });
 

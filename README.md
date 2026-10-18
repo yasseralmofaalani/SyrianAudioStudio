@@ -12,7 +12,8 @@
 ## التثبيت والتشغيل
 
 ```bash
-cd syrian-audio-studio
+git clone https://github.com/yasseralmofaalani/SyrianAudioStudio.git
+cd SyrianAudioStudio
 npm install
 copy .env.example .env
 npm start
@@ -21,6 +22,10 @@ npm start
 ثم افتح المتصفح على:
 
 [http://127.0.0.1:3847](http://127.0.0.1:3847)
+
+> **مهم:** GitHub Pages موقع ثابت فقط. لا يشغّل Node/FFmpeg/Telegram.  
+> استخدم `npm start` محلياً، أو انشر الخادم على VPS / Render / Railway.  
+> فتح `*.github.io` يعرض الواجهة فقط ولن يحوّل الصوت.
 
 للتطوير مع إعادة التشغيل التلقائي:
 

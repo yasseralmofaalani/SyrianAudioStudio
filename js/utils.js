@@ -6,6 +6,23 @@ export function $$(sel, root = document) {
   return [...root.querySelectorAll(sel)];
 }
 
+/** أساس طلبات API — فارغ يعني نفس أصل الصفحة (خادم Node) */
+export function getApiBase() {
+  const params = new URLSearchParams(location.search);
+  const fromQuery = params.get('api');
+  if (fromQuery) return fromQuery.replace(/\/$/, '');
+  try {
+    const stored = localStorage.getItem('sas_api');
+    if (stored) return stored.replace(/\/$/, '');
+  } catch { /* ignore */ }
+  return '';
+}
+
+export function apiUrl(path) {
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${getApiBase()}${p}`;
+}
+
 export function formatBytes(n = 0) {
   const v = Number(n) || 0;
   if (v < 1024) return `${v} B`;
@@ -36,7 +53,7 @@ export function toast(message, type = 'info') {
   setTimeout(() => {
     el.style.opacity = '0';
     setTimeout(() => el.remove(), 280);
-  }, 3200);
+  }, 4200);
 }
 
 export async function api(path, options = {}) {
@@ -46,7 +63,7 @@ export async function api(path, options = {}) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
-  const res = await fetch(path, opts);
+  const res = await fetch(apiUrl(path), opts);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error || `خطأ في الطلب (${res.status})`);
@@ -76,4 +93,9 @@ export function statusBadge(status) {
 
 export function confirmDialog(message) {
   return window.confirm(message);
+}
+
+export function isStaticHost() {
+  return /github\.io$/i.test(location.hostname)
+    || location.protocol === 'file:';
 }
