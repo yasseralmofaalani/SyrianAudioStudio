@@ -147,8 +147,9 @@ async function boot() {
   initNav();
   initTheme();
 
-  // أظهر الواجهة بسرعة حتى لو استمر تحميل FFmpeg
-  const splashTimer = setTimeout(showApp, 700);
+  // أظهر الواجهة فوراً — لا تنتظر FFmpeg أو الشبكة
+  showApp();
+  const splashTimer = setTimeout(showApp, 300);
 
   let serverOk = false;
   try {
@@ -163,6 +164,7 @@ async function boot() {
   } catch {
     await startLocalMode();
   }
+  showApp();
 
   const player = createPlayer({
     getStreamUrl: (fileId, which) => {

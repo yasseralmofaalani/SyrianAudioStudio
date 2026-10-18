@@ -119,7 +119,15 @@ html.dark .empty { background: rgba(255,255,255,0.03); }
   color: #fff;
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
-.splash.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.splash.is-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.splash.is-done {
+  /* بعد الاختفاء لا يعيق الواجهة */
+  display: none;
+}
 .splash__card { text-align: center; padding: 2rem; }
 .splash__title { margin: 1rem 0 0.25rem; font-size: clamp(1.6rem, 4vw, 2.4rem); }
 .splash__sub { margin: 0; color: var(--sy-gold); letter-spacing: 0.08em; }
